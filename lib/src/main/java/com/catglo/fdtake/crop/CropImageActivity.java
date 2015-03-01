@@ -77,6 +77,9 @@ public class CropImageActivity extends MonitoredActivity {
     private CropImageView imageView;
     private HighlightView cropView;
 
+    //So we know if we need to launch another intent in onCreate
+    private boolean hasPhoto = false;
+
     File cropped;
 
     @Override
@@ -99,6 +102,9 @@ public class CropImageActivity extends MonitoredActivity {
 
         cropped = new File(Environment.getExternalStorageDirectory(),"capture.image");//TODO: random string file name
 
+        if (icicle!=null){
+            hasPhoto = icicle.getBoolean("hasPhoto");
+        }
 
         boolean fromGallery = intent.getBooleanExtra(EXTRA_USE_GALLERY,false);
         if (fromGallery)
@@ -111,11 +117,19 @@ public class CropImageActivity extends MonitoredActivity {
         }
     }
 
+
+    @Override
+    public void onSaveInstanceState(Bundle b){
+        super.onSaveInstanceState(b);
+        b.putBoolean("hasPhoto",hasPhoto);
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
         switch (requestCode) {
             case RESULT_LOAD_IMG:
+                hasPhoto=true;
                 if(resultCode == RESULT_OK){
 
                   //  try {
@@ -595,6 +609,7 @@ public class CropImageActivity extends MonitoredActivity {
         super.onPhotoUriNotFound();
         //TextView uirView = (TextView) findViewById(R.id.activity_take_photo_image_uri);
         //uirView.setText("photo uri: not found");
+        finish();
     }
 
 }

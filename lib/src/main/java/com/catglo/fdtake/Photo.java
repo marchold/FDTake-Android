@@ -1,20 +1,27 @@
 package com.catglo.fdtake;
 
 import android.app.Activity;
+import android.app.Dialog;
+import android.app.DialogFragment;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Bundle;
 import android.provider.MediaStore;
 
-import com.afollestad.materialdialogs.MaterialDialog;
+import com.afollestad.materialdialogs.MaterialDialogCompat;
 import com.catglo.fdtake.crop.CropImageActivity;
 
 /**
- * Created by goblets on 2/27/15.
+ * Public interface to take photo library.
  */
 public class Photo {
     private final Activity activity;
     public static int RESULT_PICK_IMAGE = 1001;
     private final Intent intent;
+    String takePhotoButtonLabel = "Take Photo";
+    String message = "Get Photo How?";
+    String pickPhotoButtonLabel = "Pick From Gallery";
 
     static interface Extra {
         String ASPECT_X = "aspect_x";
@@ -52,35 +59,79 @@ public class Photo {
         return this;
     }
 
-    public void takePhotoOrChooseFromLibrary(){
-        new MaterialDialog.Builder(activity)
-                .positiveText("Take Photo")
-                .negativeText("Pick From Gallery")
-                .forceStacking(true)
-                .callback(new MaterialDialog.ButtonCallback() {
-                    @Override
-                    public void onPositive(MaterialDialog dialog) {
-                        //  startCameraIntent();
-                        intent.putExtra(CropImageActivity.EXTRA_USE_GALLERY, false);
-                        activity.startActivityForResult(intent, RESULT_PICK_IMAGE);
-                    }
 
-                    @Override
-                    public void onNegative(MaterialDialog dialog) {
+    /**
+     *
+     * @param message
+     * @return
+     */
+    public Photo message(String message) {
+        this.message = message;
+        return this;
+    }
 
-                        intent.putExtra(CropImageActivity.EXTRA_USE_GALLERY, true);
-                        activity.startActivityForResult(intent, RESULT_PICK_IMAGE);
-
-                        //   Intent galleryIntent = new Intent(Intent.ACTION_PICK,
-                        //           android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                        //   startActivityForResult(galleryIntent, RESULT_LOAD_IMG);
-                    }
-                })
-                .show();
+    /**
+     *
+     * @param takePhotoButtonLabel
+     * @return
+     */
+    public Photo takePhotoButtonLabel(String takePhotoButtonLabel) {
+        this.takePhotoButtonLabel = takePhotoButtonLabel;
+        return this;
     }
 
 
+    /**
+     *
+     * @param pickPhotoButtonLabel
+     * @return
+     */
+    public Photo pickPhotoButtonLabel(String pickPhotoButtonLabel) {
+        this.pickPhotoButtonLabel = pickPhotoButtonLabel;
+        return this;
+    }
 
+    /**
+     * Launch the camera to capture a photo then crop the image
+     */
+    public void takePhoto() {
+        intent.putExtra(CropImageActivity.EXTRA_USE_GALLERY, false);
+        activity.startActivityForResult(intent, RESULT_PICK_IMAGE);
+    }
 
+    /**
+     * Launch the gallery to get a photo then crop the image
+     */
+    public void chooseFromLibrary() {
+        intent.putExtra(CropImageActivity.EXTRA_USE_GALLERY, true);
+        activity.startActivityForResult(intent, RESULT_PICK_IMAGE);
+    }
+
+    /**
+     * Shows a dialog to pick from gallery or take a photo with the camera
+     */
+    public void takePhotoOrChooseFromLibrary() {
+        DialogFragment fragment = new DialogFragment() {
+            @Override
+            public Dialog onCreateDialog(Bundle savedInstanceState) {
+                return new MaterialDialogCompat
+                        .Builder(activity)
+                        .setTitle(message)
+                        .setPositiveButton(takePhotoButtonLabel, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                takePhoto();
+                            }
+                        })
+                        .setNeutralButton(pickPhotoButtonLabel, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                chooseFromLibrary();
+                            }
+                        })
+                        .create();
+            }
+        };
+        fragment.show(activity.getFragmentManager(), "takePhotoOrChooseFromLibraryDialog");
+    }
 }
-//takePhotoOrChooseFromLibrary
